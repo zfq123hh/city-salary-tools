@@ -9,6 +9,9 @@ const siteName = "秒算工资工具";
 const siteUrl = (process.env.SITE_URL || "https://example.com").replace(/\/$/, "");
 const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
 const buildDate = new Date().toISOString().slice(0, 10);
+const verificationMetaTags = [
+  '<meta name="msvalidate.01" content="A4ED26CB6676E8C648E5D5893290DD59" />'
+];
 const pages = [];
 
 function ensureDir(filePath) { fs.mkdirSync(path.dirname(filePath), { recursive: true }); }
@@ -48,6 +51,7 @@ function layout({ route, title, description, keywords = [], body, schema }) {
   <meta name="description" content="${esc(description)}" />
   <meta name="keywords" content="${esc(keywords.join(","))}" />
   <meta name="robots" content="index,follow" />
+  ${verificationMetaTags.join("\n  ")}
   <link rel="canonical" href="${abs(route)}" />
   <link rel="stylesheet" href="/assets/style.css" />
   <meta property="og:type" content="website" />
