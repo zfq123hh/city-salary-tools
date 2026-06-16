@@ -25,13 +25,25 @@ https://github.com/zfq123hh/city-salary-tools
 网站地址：
 
 ```text
+https://miaosuangongzi.com/
+```
+
+GitHub Pages 临时地址：
+
+```text
 https://zfq123hh.github.io/city-salary-tools/
 ```
 
 Sitemap：
 
 ```text
-https://zfq123hh.github.io/city-salary-tools/sitemap.xml
+https://miaosuangongzi.com/sitemap.xml
+```
+
+DNS 设置文档：
+
+```text
+docs/DNS_MIAOSUANGONGZI.md
 ```
 
 ## 第二步：买域名
