@@ -29,7 +29,11 @@ const jsCheck = spawnSync(process.execPath, ["--check", path.join(outDir, "asset
 if (jsCheck.status !== 0) fail(`app.js 语法错误\n${jsCheck.stderr}`);
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(d=>{const p=path.join(dir,d.name);return d.isDirectory()?walk(p):[p]})}
 const htmlFiles = walk(outDir).filter(f=>f.endsWith(".html"));
-const pageHtmlFiles = htmlFiles.filter(f => !path.basename(f).startsWith("baidu_verify_"));
+function isVerificationHtml(file) {
+  const base = path.basename(file);
+  return base.startsWith("baidu_verify_") || /^google[a-z0-9]+\.html$/i.test(base);
+}
+const pageHtmlFiles = htmlFiles.filter(f => !isVerificationHtml(f));
 if (pageHtmlFiles.length < 60) fail(`页面数量不足，当前 ${pageHtmlFiles.length}`);
 const routeToFile = href => {
   if (basePath && href.startsWith(`${basePath}/`)) href = href.slice(basePath.length);
