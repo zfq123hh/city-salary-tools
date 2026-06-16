@@ -29,7 +29,8 @@ const jsCheck = spawnSync(process.execPath, ["--check", path.join(outDir, "asset
 if (jsCheck.status !== 0) fail(`app.js 语法错误\n${jsCheck.stderr}`);
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(d=>{const p=path.join(dir,d.name);return d.isDirectory()?walk(p):[p]})}
 const htmlFiles = walk(outDir).filter(f=>f.endsWith(".html"));
-if (htmlFiles.length < 60) fail(`页面数量不足，当前 ${htmlFiles.length}`);
+const pageHtmlFiles = htmlFiles.filter(f => !path.basename(f).startsWith("baidu_verify_"));
+if (pageHtmlFiles.length < 60) fail(`页面数量不足，当前 ${pageHtmlFiles.length}`);
 const routeToFile = href => {
   if (basePath && href.startsWith(`${basePath}/`)) href = href.slice(basePath.length);
   if (href === "/") return path.join(outDir,"index.html");
@@ -38,7 +39,7 @@ const routeToFile = href => {
   return path.join(outDir,href.slice(1));
 };
 const broken = [];
-for (const file of htmlFiles) {
+for (const file of pageHtmlFiles) {
   const html = fs.readFileSync(file,"utf8");
   if (!/<title>.+<\/title>/.test(html)) broken.push(`${file}: missing title`);
   if (!/<meta name="description"/.test(html)) broken.push(`${file}: missing description`);
@@ -51,5 +52,5 @@ for (const file of htmlFiles) {
 if (broken.length) fail(`发现内部链接/SEO问题:\n${broken.slice(0,30).join("\n")}`);
 const sitemap = fs.readFileSync(path.join(outDir,"sitemap.xml"),"utf8");
 const locCount = (sitemap.match(/<loc>/g)||[]).length;
-if (locCount !== htmlFiles.length) fail(`sitemap 数量 ${locCount} 与 HTML 页面数量 ${htmlFiles.length} 不一致`);
-console.log(`✅ 检查通过：${htmlFiles.length} 个 HTML 页面，${locCount} 条 sitemap URL，内部链接无断链，JS 语法通过。`);
+if (locCount !== pageHtmlFiles.length) fail(`sitemap 数量 ${locCount} 与 HTML 页面数量 ${pageHtmlFiles.length} 不一致`);
+console.log(`✅ 检查通过：${pageHtmlFiles.length} 个 SEO HTML 页面，${locCount} 条 sitemap URL，${htmlFiles.length - pageHtmlFiles.length} 个验证 HTML 文件，内部链接无断链，JS 语法通过。`);
