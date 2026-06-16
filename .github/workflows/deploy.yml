@@ -27,7 +27,8 @@ jobs:
       - run: npm install
       - run: npm test
         env:
-          SITE_URL: ${{ vars.SITE_URL || 'https://example.com' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://zfq123hh.github.io/city-salary-tools' }}
+          BASE_PATH: ${{ vars.BASE_PATH || '/city-salary-tools' }}
       - name: Add CNAME when configured
         if: ${{ vars.CUSTOM_DOMAIN != '' }}
         run: echo "${{ vars.CUSTOM_DOMAIN }}" > dist/CNAME

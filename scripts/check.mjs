@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
 const outDir = path.join(root, "dist");
+const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
 const mustExist = [
   "index.html",
   "cities/index.html",
@@ -30,6 +31,7 @@ function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(d=>{c
 const htmlFiles = walk(outDir).filter(f=>f.endsWith(".html"));
 if (htmlFiles.length < 60) fail(`页面数量不足，当前 ${htmlFiles.length}`);
 const routeToFile = href => {
+  if (basePath && href.startsWith(`${basePath}/`)) href = href.slice(basePath.length);
   if (href === "/") return path.join(outDir,"index.html");
   if (href.startsWith("/assets/")) return path.join(outDir,href.slice(1));
   if (href.endsWith("/")) return path.join(outDir,href.slice(1),"index.html");

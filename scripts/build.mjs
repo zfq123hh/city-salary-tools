@@ -7,6 +7,7 @@ const root = path.resolve(process.cwd());
 const outDir = path.join(root, "dist");
 const siteName = "秒算工资工具";
 const siteUrl = (process.env.SITE_URL || "https://example.com").replace(/\/$/, "");
+const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
 const buildDate = new Date().toISOString().slice(0, 10);
 const pages = [];
 
@@ -17,7 +18,11 @@ function write(route, html, priority = 0.7, changefreq = "weekly") {
     ? path.join(outDir, "index.html")
     : path.join(outDir, clean.slice(1), "index.html");
   ensureDir(file);
-  fs.writeFileSync(file, html, "utf8");
+  let output = html;
+  if (basePath) {
+    output = output.replaceAll('href="/', `href="${basePath}/`).replaceAll('src="/', `src="${basePath}/`);
+  }
+  fs.writeFileSync(file, output, "utf8");
   pages.push({ route: clean, priority, changefreq });
 }
 function esc(s) { return String(s).replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
