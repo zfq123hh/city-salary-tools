@@ -1,0 +1,20 @@
+{
+  "name": "city-salary-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "城市工资税后、社保公积金、个税计算程序化 SEO 静态工具站",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "npm run build && npm run check"
+  },
+  "keywords": [
+    "工资计算器",
+    "个税计算器",
+    "社保计算器",
+    "公积金计算器",
+    "程序化SEO"
+  ],
+  "license": "UNLICENSED"
+}
