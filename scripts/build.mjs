@@ -106,6 +106,8 @@ function build(){
   fs.mkdirSync(path.join(outDir,"assets"), { recursive: true });
   fs.copyFileSync(path.join(root,"src/assets/style.css"), path.join(outDir,"assets/style.css"));
   fs.copyFileSync(path.join(root,"src/assets/app.js"), path.join(outDir,"assets/app.js"));
+  const publicDir = path.join(root, "public");
+  if (fs.existsSync(publicDir)) fs.cpSync(publicDir, outDir, { recursive: true });
   write("/", homePage(), 1.0, "daily");
   write("/cities/", cityIndex(), 0.9, "daily");
   write("/tools/", toolsIndex(), 0.9, "daily");
