@@ -10,42 +10,29 @@ C:\Users\VersaPro\city-salary-tools
 
 - 本地已生成 65 个 HTML 页面。
 - 本地检查通过：sitemap、robots、内部链接、JS 语法都正常。
-- GitHub Pages 自动部署工作流已写好。
-- 但当前电脑上的 GitHub CLI 未登录，所以还没有推送到远程仓库。
+- GitHub Pages 自动部署工作流已写好并执行成功。
+- GitHub 仓库已创建并推送。
+- 线上地址已可访问。
 
-## 第一步：先部署到 GitHub Pages
+## 当前线上地址
 
-需要用户完成 GitHub 授权，二选一：
-
-### 方式 A：在电脑上登录 GitHub CLI
-
-1. 打开电脑上的 Git Bash 或终端。
-2. 输入：
-
-```bash
-gh auth login
-```
-
-3. 按提示选择：
-   - GitHub.com
-   - HTTPS
-   - Login with a web browser
-4. 浏览器打开后登录你的 GitHub 账号。
-5. 授权完成后告诉 Hermes：
+GitHub 仓库：
 
 ```text
-GitHub 登录好了，继续部署城市工资站
+https://github.com/zfq123hh/city-salary-tools
 ```
 
-### 方式 B：提供 GitHub Token
+网站地址：
 
-如果不想网页登录，可以生成 GitHub Token，权限至少需要：
+```text
+https://zfq123hh.github.io/city-salary-tools/
+```
 
-- repo
-- workflow
-- pages
+Sitemap：
 
-然后发给 Hermes 处理。注意：Token 是敏感信息，优先建议用方式 A。
+```text
+https://zfq123hh.github.io/city-salary-tools/sitemap.xml
+```
 
 ## 第二步：买域名
 
