@@ -125,6 +125,7 @@ function build(){
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(p=>`  <url><loc>${abs(p.route)}</loc><lastmod>${buildDate}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority.toFixed(2)}</priority></url>`).join("\n")}\n</urlset>\n`;
   fs.writeFileSync(path.join(outDir,"sitemap.xml"), sitemap, "utf8");
   fs.writeFileSync(path.join(outDir,"robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`, "utf8");
+  fs.writeFileSync(path.join(outDir,"CNAME"), "miaosuangongzi.com\n", "utf8");
   fs.writeFileSync(path.join(outDir,"page-manifest.json"), JSON.stringify({ siteName, siteUrl, generatedAt: new Date().toISOString(), pages: pages.length, cities: cities.length, cityLongTailPages: cities.length * cityToolTypes.length, tools: tools.length }, null, 2), "utf8");
   console.log(`Built ${pages.length} HTML pages into ${outDir}`);
   console.log(`Cities: ${cities.length}, city long-tail pages: ${cities.length * cityToolTypes.length}, tools: ${tools.length}`);
