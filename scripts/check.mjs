@@ -12,6 +12,7 @@ const mustExist = [
   "cities/beijing/salary-tax-calculator/index.html",
   "cities/shanghai/social-security-calculator/index.html",
   "cities/shenzhen/housing-fund-calculator/index.html",
+  "cities/beijing/annual-bonus-tax-calculator/index.html",
   "tools/annual-bonus-tax/index.html",
   "tools/retirement-age/index.html",
   "sitemap.xml",

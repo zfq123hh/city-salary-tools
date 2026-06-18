@@ -13,5 +13,6 @@ export const tools = [
 export const cityToolTypes = [
   { slug: "salary-tax-calculator", label: "税后工资计算器", kind: "salary", priority: 0.95 },
   { slug: "social-security-calculator", label: "社保计算器", kind: "social", priority: 0.90 },
-  { slug: "housing-fund-calculator", label: "公积金计算器", kind: "fund", priority: 0.88 }
+  { slug: "housing-fund-calculator", label: "公积金计算器", kind: "fund", priority: 0.88 },
+  { slug: "annual-bonus-tax-calculator", label: "年终奖个税计算器", kind: "cityBonus", priority: 0.86 }
 ];
