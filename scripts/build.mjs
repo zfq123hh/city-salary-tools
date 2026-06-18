@@ -6,7 +6,7 @@ import { tools, cityToolTypes } from "../src/data/tools.mjs";
 const root = path.resolve(process.cwd());
 const outDir = path.join(root, "dist");
 const siteName = "秒算工资工具";
-const siteUrl = (process.env.SITE_URL || "https://example.com").replace(/\/$/, "");
+const siteUrl = (process.env.SITE_URL || "https://miaosuangongzi.com").replace(/\/$/, "");
 const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
 const buildDate = new Date().toISOString().slice(0, 10);
 const verificationMetaTags = [
