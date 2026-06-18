@@ -59,6 +59,13 @@ function layout({ route, title, description, keywords = [], body, schema }) {
   <meta property="og:description" content="${esc(description)}" />
   <meta property="og:url" content="${abs(route)}" />
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "x8qboy8zxx");
+  </script>
 </head>
 <body>
   <header class="topbar"><div class="container topbar-inner"><a class="brand" href="/">${siteName}</a><nav class="nav"><a href="/cities/">城市工资</a><a href="/tools/">实用工具</a><a href="/privacy/">隐私政策</a><a href="/contact/">联系</a></nav></div></header>
