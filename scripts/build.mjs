@@ -13,6 +13,7 @@ const verificationMetaTags = [
   '<meta name="msvalidate.01" content="A4ED26CB6676E8C648E5D5893290DD59" />'
 ];
 const pages = [];
+const salaryScenarioAmounts = [5000, 8000, 10000, 12000, 15000, 20000, 30000, 50000];
 
 function ensureDir(filePath) { fs.mkdirSync(path.dirname(filePath), { recursive: true }); }
 function write(route, html, priority = 0.7, changefreq = "weekly") {
@@ -29,6 +30,24 @@ function write(route, html, priority = 0.7, changefreq = "weekly") {
   pages.push({ route: clean, priority, changefreq });
 }
 function esc(s) { return String(s).replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function formatYuan(n) { return `￥${Math.round(n).toLocaleString("zh-CN")}`; }
+function monthlyTax(taxable) {
+  const brackets = [[3000,.03,0],[12000,.10,210],[25000,.20,1410],[35000,.25,2660],[55000,.30,4410],[80000,.35,7160],[Infinity,.45,15160]];
+  for (const [limit, rate, quick] of brackets) if (taxable <= limit) return Math.max(0, taxable * rate - quick);
+  return 0;
+}
+function calcSalaryEstimate(city, gross, fundRate = 0.07) {
+  const base = Math.min(Math.max(gross, city.minBase), city.maxBase);
+  const pension = base * 0.08;
+  const medical = base * 0.02;
+  const unemployment = base * 0.005;
+  const fund = base * fundRate;
+  const social = pension + medical + unemployment;
+  const taxable = Math.max(0, gross - social - fund - 5000);
+  const tax = monthlyTax(taxable);
+  const net = gross - social - fund - tax;
+  return { base, social, fund, taxable, tax, net, fundRate };
+}
 function abs(route) { return `${siteUrl}${route}`; }
 function breadcrumb(items) {
   return `<div class="breadcrumbs"><a href="/">首页</a>${items.map(i => ` / ${i.href ? `<a href="${i.href}">${esc(i.label)}</a>` : esc(i.label)}`).join("")}</div>`;
@@ -109,7 +128,29 @@ function cityPage(city, type){
   const desc = `${city.name}${type.label}，支持按工资、缴费基数、公积金比例或全年一次性奖金估算到手工资、社保、公积金或年终奖个税，适合查询${city.name}工资税后和五险一金。`;
   const calc = type.kind === "salary" ? salaryCalc(city) : type.kind === "social" ? socialCalc(city) : type.kind === "fund" ? fundCalc(city) : cityBonusCalc(city);
   const related = cityToolTypes.filter(x=>x.slug!==type.slug).map(x=>`<a href="/cities/${city.slug}/${x.slug}/">${city.name}${x.label}</a>`).join("");
-  return layout({route:`/cities/${city.slug}/${type.slug}/`,title,description:desc,keywords:[`${city.name}${type.label}`,`${city.name}税后工资`,`${city.name}社保`,`${city.name}公积金`,`${city.name}年终奖个税`],schema:{"@context":"https://schema.org","@type":"SoftwareApplication",name:title,applicationCategory:"FinanceApplication",operatingSystem:"Web",offers:{"@type":"Offer",price:"0",priceCurrency:"CNY"}},body:`<main class="container section">${breadcrumb([{label:"城市工资",href:"/cities/"},{label:city.name}])}<h1>${city.name}${type.label}</h1><p class="muted">${desc}</p>${calc}${adSlot()}<section class="card content"><h2>${city.name}${type.label}说明</h2><p>${cityNote}</p><p>本页按个人常见缴费比例、个税速算扣除数和全年一次性奖金规则做估算，适合求职谈薪、工资核对、年终奖发放前测算和预算规划。正式申报请以公司 HR、税务局、社保局和公积金中心结果为准。</p><h2>相关工具</h2><div class="list">${related}<a href="/tools/annual-bonus-tax/">通用年终奖个税计算器</a><a href="/tools/retirement-age/">退休年龄计算器</a></div></section>${faq([[`${city.name}${type.label}结果准确吗？`,`本工具用于快速估算，社保基数、专项附加扣除、年终奖计税方式和地方政策会影响最终结果。`],[`年终奖个税为什么和工资条不同？`,`公司可能采用并入综合所得或全年一次性奖金单独计税，且专项扣除、其他奖金和补贴会影响实际税额，本页先按常见年终奖单独计税模型估算。`]])}</main>`})
+  const amountLinks = type.kind === "salary"
+    ? `<h2>${city.name}常见工资税后测算</h2><div class="list">${salaryScenarioAmounts.map(amount=>`<a href="/cities/${city.slug}/salary-${amount}/">${city.name}${amount}元工资税后多少</a>`).join("")}</div>`
+    : "";
+  return layout({route:`/cities/${city.slug}/${type.slug}/`,title,description:desc,keywords:[`${city.name}${type.label}`,`${city.name}税后工资`,`${city.name}社保`,`${city.name}公积金`,`${city.name}年终奖个税`],schema:{"@context":"https://schema.org","@type":"SoftwareApplication",name:title,applicationCategory:"FinanceApplication",operatingSystem:"Web",offers:{"@type":"Offer",price:"0",priceCurrency:"CNY"}},body:`<main class="container section">${breadcrumb([{label:"城市工资",href:"/cities/"},{label:city.name}])}<h1>${city.name}${type.label}</h1><p class="muted">${desc}</p>${calc}${adSlot()}<section class="card content"><h2>${city.name}${type.label}说明</h2><p>${cityNote}</p><p>本页按个人常见缴费比例、个税速算扣除数和全年一次性奖金规则做估算，适合求职谈薪、工资核对、年终奖发放前测算和预算规划。正式申报请以公司 HR、税务局、社保局和公积金中心结果为准。</p>${amountLinks}<h2>相关工具</h2><div class="list">${related}<a href="/tools/annual-bonus-tax/">通用年终奖个税计算器</a><a href="/tools/retirement-age/">退休年龄计算器</a></div></section>${faq([[`${city.name}${type.label}结果准确吗？`,`本工具用于快速估算，社保基数、专项附加扣除、年终奖计税方式和地方政策会影响最终结果。`],[`年终奖个税为什么和工资条不同？`,`公司可能采用并入综合所得或全年一次性奖金单独计税，且专项扣除、其他奖金和补贴会影响实际税额，本页先按常见年终奖单独计税模型估算。`]])}</main>`})
+}
+function salaryScenarioPage(city, gross){
+  const estimate = calcSalaryEstimate(city, gross);
+  const route = `/cities/${city.slug}/salary-${gross}/`;
+  const title = `${city.name}${gross}元工资税后多少2026 - ${city.name}${gross}月薪到手工资估算`;
+  const description = `${city.name}${gross}元工资税后到手约${formatYuan(estimate.net)}，本页拆解个人社保、公积金、个税和缴费基数，适合查询${city.name}${gross}工资扣税后剩多少。`;
+  const ratio = gross ? ((estimate.net / gross) * 100).toFixed(1) : "0.0";
+  const lower = salaryScenarioAmounts.filter(a=>a<gross).slice(-1)[0];
+  const higher = salaryScenarioAmounts.find(a=>a>gross);
+  const scenarioLinks = [lower, higher].filter(Boolean).map(amount=>`<a href="/cities/${city.slug}/salary-${amount}/">${city.name}${amount}元工资税后多少</a>`).join("");
+  const otherCities = cities.filter(c=>c.slug!==city.slug).slice(0,8).map(c=>`<a href="/cities/${c.slug}/salary-${gross}/">${c.name}${gross}元工资税后多少</a>`).join("");
+  return layout({
+    route,
+    title,
+    description,
+    keywords:[`${city.name}${gross}工资税后多少`, `${city.name}${gross}月薪到手`, `${city.name}${gross}扣税`, `${city.name}税后工资计算器`],
+    schema:{"@context":"https://schema.org","@type":"Article",headline:title,description,url:abs(route),mainEntityOfPage:abs(route)},
+    body:`<main class="container section">${breadcrumb([{label:"城市工资",href:"/cities/"},{label:city.name,href:`/cities/${city.slug}/salary-tax-calculator/`},{label:`${gross}元税后`}])}<article class="card content"><h1>${city.name}${gross}元工资税后多少？</h1><p class="muted">按${city.name}常见社保比例、7% 个人公积金比例和个税起征点估算，${gross}元税前月薪到手约 <strong>${formatYuan(estimate.net)}</strong>，到手率约 <strong>${ratio}%</strong>。</p><div class="grid two"><section class="card"><h2>估算结果</h2><dl><dt>税前月薪</dt><dd>${formatYuan(gross)}</dd><dt>预计到手</dt><dd><strong>${formatYuan(estimate.net)}</strong></dd><dt>个人所得税</dt><dd>${formatYuan(estimate.tax)}</dd><dt>个人社保</dt><dd>${formatYuan(estimate.social)}</dd><dt>个人公积金</dt><dd>${formatYuan(estimate.fund)}</dd><dt>参考缴费基数</dt><dd>${formatYuan(estimate.base)}</dd></dl></section><section class="card"><h2>怎么计算</h2><p>到手工资 = 税前工资 - 个人社保 - 个人公积金 - 个人所得税。</p><p>个人社保暂按养老 8%、医疗 2%、失业 0.5% 估算；公积金默认按 7% 估算。不同公司缴费基数、补贴、专项附加扣除会改变结果。</p><p><a class="btn" href="/cities/${city.slug}/salary-tax-calculator/">打开${city.name}税后工资计算器，改工资和比例</a></p></section></div></article>${adSlot()}<section class="card content"><h2>${city.name}${gross}元月薪适合怎么用这个结果？</h2><p>如果你在谈薪、换工作或核对工资条，可以先用本页看大致扣款，再到计算器里把社保基数、公积金比例改成公司实际口径。对比 offer 时建议同时看税前工资、到手工资、公司是否足额缴纳五险一金和年终奖发放规则。</p><h2>相邻工资档位</h2><div class="list">${scenarioLinks}<a href="/cities/${city.slug}/salary-tax-calculator/">${city.name}任意工资税后计算器</a></div><h2>其他城市同档工资</h2><div class="list">${otherCities}</div></section>${faq([[`${city.name}${gross}元工资税后为什么和实际工资条不同？`,`本页是估算。实际工资会受社保/公积金基数、专项附加扣除、企业补贴、请假、奖金并入工资等影响。`],[`${city.name}${gross}元月薪需要交多少个税？`,`按当前默认口径估算，个人所得税约 ${formatYuan(estimate.tax)}。如专项附加扣除较高，实际个税可能更低。`]])}</main>`
+  })
 }
 function toolPage(tool){return layout({route:`/tools/${tool.slug}/`,title:`${tool.name}在线计算`,description:`${tool.name}，${tool.short}，无需注册，打开即可使用。`,keywords:[tool.name,tool.category,"在线计算器"],schema:{"@context":"https://schema.org","@type":"SoftwareApplication",name:tool.name,applicationCategory:"UtilityApplication",operatingSystem:"Web",offers:{"@type":"Offer",price:"0",priceCurrency:"CNY"}},body:`<main class="container section">${breadcrumb([{label:"实用工具",href:"/tools/"},{label:tool.name}])}<h1>${tool.name}</h1><p class="muted">${tool.short}。本工具为免费在线估算工具，适合日常快速参考。</p>${generalCalculator(tool.kind)}${adSlot()}<section class="card content"><h2>${tool.name}使用说明</h2><p>输入核心参数后，页面会自动计算结果。为了保持加载速度和隐私，计算过程在浏览器本地完成，不需要上传个人数据。</p><h2>相关城市工资工具</h2><div class="list">${cities.slice(0,8).map(c=>`<a href="/cities/${c.slug}/salary-tax-calculator/">${c.name}税后工资计算器</a>`).join("")}</div></section>${faq([[`${tool.name}需要注册吗？`,`不需要。页面打开即可使用。`],[`计算结果可以作为最终依据吗？`,`不建议。本工具适合估算和对比，最终结果请以官方和机构出具的数据为准。`]])}</main>`})}
 function legalPage(route,title,content){return layout({route,title,description:`${siteName}${title}`,body:`<main class="container section">${breadcrumb([{label:title}])}<article class="card content"><h1>${title}</h1>${content}</article></main>`})}
@@ -124,6 +165,7 @@ function build(){
   write("/cities/", cityIndex(), 0.9, "daily");
   write("/tools/", toolsIndex(), 0.9, "daily");
   for (const city of cities) for (const type of cityToolTypes) write(`/cities/${city.slug}/${type.slug}/`, cityPage(city,type), type.priority, "weekly");
+  for (const city of cities) for (const amount of salaryScenarioAmounts) write(`/cities/${city.slug}/salary-${amount}/`, salaryScenarioPage(city, amount), 0.82, "monthly");
   for (const tool of tools) write(`/tools/${tool.slug}/`, toolPage(tool), tool.priority, "weekly");
   write("/about/", legalPage("/about/","关于我们",`<p>${siteName}提供工资税后、社保公积金、个税、贷款和日期类工具，目标是用程序化 SEO 覆盖用户真实搜索需求。</p><p>当前版本为 MVP，后续会持续补充城市数据、政策更新时间和更多长尾页面。</p>`), 0.4, "monthly");
   write("/privacy/", legalPage("/privacy/","隐私政策",`<p>本站工具计算默认在浏览器本地完成，不要求用户注册，不主动收集身份证、手机号、银行卡等敏感个人信息。</p><p>后续接入广告联盟或统计工具时，可能由第三方服务按其隐私政策处理 Cookie、设备信息和访问日志。</p>`), 0.4, "yearly");
@@ -134,8 +176,8 @@ function build(){
   fs.writeFileSync(path.join(outDir,"sitemap.xml"), sitemap, "utf8");
   fs.writeFileSync(path.join(outDir,"robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`, "utf8");
   fs.writeFileSync(path.join(outDir,"CNAME"), "miaosuangongzi.com\n", "utf8");
-  fs.writeFileSync(path.join(outDir,"page-manifest.json"), JSON.stringify({ siteName, siteUrl, generatedAt: new Date().toISOString(), pages: pages.length, cities: cities.length, cityLongTailPages: cities.length * cityToolTypes.length, tools: tools.length }, null, 2), "utf8");
+  fs.writeFileSync(path.join(outDir,"page-manifest.json"), JSON.stringify({ siteName, siteUrl, generatedAt: new Date().toISOString(), pages: pages.length, cities: cities.length, cityLongTailPages: cities.length * cityToolTypes.length, salaryScenarioPages: cities.length * salaryScenarioAmounts.length, tools: tools.length }, null, 2), "utf8");
   console.log(`Built ${pages.length} HTML pages into ${outDir}`);
-  console.log(`Cities: ${cities.length}, city long-tail pages: ${cities.length * cityToolTypes.length}, tools: ${tools.length}`);
+  console.log(`Cities: ${cities.length}, city long-tail pages: ${cities.length * cityToolTypes.length}, salary scenario pages: ${cities.length * salaryScenarioAmounts.length}, tools: ${tools.length}`);
 }
 build();
