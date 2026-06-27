@@ -29,6 +29,10 @@ jobs:
         env:
           SITE_URL: ${{ vars.SITE_URL || 'https://miaosuangongzi.com' }}
           BASE_PATH: ${{ vars.BASE_PATH }}
+          ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+          ADSENSE_SLOT: ${{ vars.ADSENSE_SLOT }}
+          ADSENSE_PUBLISHER_ID: ${{ vars.ADSENSE_PUBLISHER_ID }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
       - name: Add CNAME when configured
         if: ${{ vars.CUSTOM_DOMAIN != '' }}
         run: echo "${{ vars.CUSTOM_DOMAIN }}" > dist/CNAME

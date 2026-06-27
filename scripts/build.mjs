@@ -8,6 +8,10 @@ const outDir = path.join(root, "dist");
 const siteName = "秒算工资工具";
 const siteUrl = (process.env.SITE_URL || "https://miaosuangongzi.com").replace(/\/$/, "");
 const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
+const adsenseClient = (process.env.ADSENSE_CLIENT || "").trim();
+const adsenseSlot = (process.env.ADSENSE_SLOT || "").trim();
+const adsensePublisherId = (process.env.ADSENSE_PUBLISHER_ID || "").trim();
+const contactEmail = (process.env.CONTACT_EMAIL || "").trim();
 const buildDate = new Date().toISOString().slice(0, 10);
 const verificationMetaTags = [
   '<meta name="msvalidate.01" content="A4ED26CB6676E8C648E5D5893290DD59" />'
@@ -31,6 +35,21 @@ function write(route, html, priority = 0.7, changefreq = "weekly") {
 }
 function esc(s) { return String(s).replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function formatYuan(n) { return `￥${Math.round(n).toLocaleString("zh-CN")}`; }
+function validAdSenseClient(client) { return /^ca-pub-\d+$/.test(client); }
+function adsTxtPublisher() {
+  const raw = adsensePublisherId || adsenseClient.replace(/^ca-/, "");
+  return /^pub-\d+$/.test(raw) ? raw : "";
+}
+function adsenseHead() {
+  if (!validAdSenseClient(adsenseClient)) return "";
+  return `<meta name="google-adsense-account" content="${esc(adsenseClient)}" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${esc(adsenseClient)}" crossorigin="anonymous"></script>`;
+}
+function contactLine() {
+  return contactEmail
+    ? `<a href="mailto:${esc(contactEmail)}">${esc(contactEmail)}</a>`
+    : "站点所有者后续提供商务邮箱；如需立即开放合作入口，请在 GitHub 仓库变量 CONTACT_EMAIL 中填写邮箱。";
+}
 function monthlyTax(taxable) {
   const brackets = [[3000,.03,0],[12000,.10,210],[25000,.20,1410],[35000,.25,2660],[55000,.30,4410],[80000,.35,7160],[Infinity,.45,15160]];
   for (const [limit, rate, quick] of brackets) if (taxable <= limit) return Math.max(0, taxable * rate - quick);
@@ -70,7 +89,7 @@ function layout({ route, title, description, keywords = [], body, schema }) {
   <meta name="description" content="${esc(description)}" />
   <meta name="keywords" content="${esc(keywords.join(","))}" />
   <meta name="robots" content="index,follow" />
-  ${verificationMetaTags.join("\n  ")}
+  ${[...verificationMetaTags, adsenseHead()].filter(Boolean).join("\n  ")}
   <link rel="canonical" href="${abs(route)}" />
   <link rel="stylesheet" href="/assets/style.css" />
   <meta property="og:type" content="website" />
@@ -87,14 +106,22 @@ function layout({ route, title, description, keywords = [], body, schema }) {
   </script>
 </head>
 <body>
-  <header class="topbar"><div class="container topbar-inner"><a class="brand" href="/">${siteName}</a><nav class="nav"><a href="/cities/">城市工资</a><a href="/tools/">实用工具</a><a href="/privacy/">隐私政策</a><a href="/contact/">联系</a></nav></div></header>
+  <header class="topbar"><div class="container topbar-inner"><a class="brand" href="/">${siteName}</a><nav class="nav"><a href="/cities/">城市工资</a><a href="/tools/">实用工具</a><a href="/advertise/">广告合作</a><a href="/privacy/">隐私政策</a><a href="/contact/">联系</a></nav></div></header>
   ${body}
-  <footer class="footer"><div class="container"><p><strong>${siteName}</strong>：专注工资税后、社保公积金、个税、贷款和日期工具。</p><p><a href="/about/">关于我们</a> · <a href="/terms/">使用条款</a> · <a href="/privacy/">隐私政策</a> · <a href="/affiliate-disclosure/">推广披露</a></p><p class="muted">© ${new Date().getFullYear()} ${siteName}. 工具结果仅供估算参考，请以当地社保局、税务局、公积金中心及银行实际口径为准。</p></div></footer>
+  <footer class="footer"><div class="container"><p><strong>${siteName}</strong>：专注工资税后、社保公积金、个税、贷款和日期工具。</p><p><a href="/about/">关于我们</a> · <a href="/advertise/">广告合作</a> · <a href="/terms/">使用条款</a> · <a href="/privacy/">隐私政策</a> · <a href="/affiliate-disclosure/">推广披露</a></p><p class="muted">© ${new Date().getFullYear()} ${siteName}. 工具结果仅供估算参考，请以当地社保局、税务局、公积金中心及银行实际口径为准。</p></div></footer>
   <script src="/assets/app.js" defer></script>
 </body>
 </html>`;
 }
-function adSlot(){return `<div class="ad-slot">广告位预留：后续接入百度联盟 / 腾讯优量汇 / 国内 CPS 推荐</div>`}
+function adSlot(slot = adsenseSlot){
+  if (validAdSenseClient(adsenseClient) && slot) {
+    return `<div class="ad-slot ad-slot-live"><ins class="adsbygoogle" style="display:block" data-ad-client="${esc(adsenseClient)}" data-ad-slot="${esc(slot)}" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script></div>`;
+  }
+  if (validAdSenseClient(adsenseClient)) {
+    return `<div class="ad-slot ad-slot-live">Google AdSense 代码已接入；广告是否展示取决于账号审核、自动广告设置、地区和实时流量。</div>`;
+  }
+  return `<div class="ad-slot"><strong>广告合作位预留</strong><br>适合招聘、薪税、社保、公积金、人力资源服务赞助。<a href="/advertise/">查看广告合作说明</a></div>`;
+}
 function faq(items){return `<section class="card content"><h2>常见问题</h2>${items.map(([q,a])=>`<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}</section>`}
 function salaryCalc(city){return `<section class="card calculator" data-calculator="salary" data-min="${city.minBase}" data-max="${city.maxBase}"><div><h2>${city.name}税后工资计算器</h2><p class="muted">输入月薪、社保基数和公积金比例，实时估算到手工资、个人社保、公积金和个税。</p><div class="form-row"><label>税前月薪</label><input name="gross" type="number" value="${city.avgSalary}" min="0" /></div><div class="form-row"><label>社保/公积金缴费基数</label><input name="base" type="number" value="${Math.min(city.avgSalary, city.maxBase)}" min="${city.minBase}" max="${city.maxBase}" /></div><div class="form-row"><label>个人公积金比例</label><select name="fundRate"><option value="5">5%</option><option value="7" selected>7%</option><option value="8">8%</option><option value="10">10%</option><option value="12">12%</option></select></div><p class="notice">${esc(city.name)}当前估算基数范围：社保 ${city.minBase} - ${city.maxBase} 元，公积金 ${city.fundMin} - ${city.fundMax} 元。</p></div><div class="result"><p>预计到手工资</p><p class="big js-net">--</p><dl><dt>个人所得税</dt><dd class="js-tax">--</dd><dt>个人社保</dt><dd class="js-social">--</dd><dt>个人公积金</dt><dd class="js-fund">--</dd><dt>应纳税所得额</dt><dd class="js-taxable">--</dd></dl></div></section>`}
 function socialCalc(city){return `<section class="card calculator" data-calculator="social" data-min="${city.minBase}" data-max="${city.maxBase}"><div><h2>${city.name}社保计算器</h2><p class="muted">按养老、医疗、失业等常见个人比例估算个人社保缴费，并给出企业成本参考。</p><div class="form-row"><label>社保缴费基数</label><input name="base" type="number" value="${Math.min(city.avgSalary, city.maxBase)}" min="${city.minBase}" max="${city.maxBase}" /></div><p class="notice">计算口径：个人养老 8%、医疗 2%、失业 0.5%；企业侧为常见比例估算。</p></div><div class="result"><p>个人每月社保</p><p class="big js-person">--</p><dl><dt>企业每月成本</dt><dd class="js-company">--</dd><dt>合计缴费</dt><dd class="js-total">--</dd><dt>使用基数</dt><dd class="js-base">--</dd></dl></div></section>`}
@@ -170,12 +197,15 @@ function build(){
   write("/about/", legalPage("/about/","关于我们",`<p>${siteName}提供工资税后、社保公积金、个税、贷款和日期类工具，目标是用程序化 SEO 覆盖用户真实搜索需求。</p><p>当前版本为 MVP，后续会持续补充城市数据、政策更新时间和更多长尾页面。</p>`), 0.4, "monthly");
   write("/privacy/", legalPage("/privacy/","隐私政策",`<p>本站工具计算默认在浏览器本地完成，不要求用户注册，不主动收集身份证、手机号、银行卡等敏感个人信息。</p><p>后续接入广告联盟或统计工具时，可能由第三方服务按其隐私政策处理 Cookie、设备信息和访问日志。</p>`), 0.4, "yearly");
   write("/terms/", legalPage("/terms/","使用条款",`<p>本站计算结果仅供参考，不构成税务、法律、金融或人事建议。请以当地官方机构、公司 HR、银行和税务机关的正式结果为准。</p>`), 0.4, "yearly");
-  write("/contact/", legalPage("/contact/","联系我们",`<p>如需反馈数据错误、合作或广告位接入，请先使用站点所有者后续提供的联系邮箱。MVP 阶段暂用占位页面。</p>`), 0.4, "monthly");
+  write("/advertise/", legalPage("/advertise/","广告合作",`<p>${siteName}覆盖城市税后工资、社保、公积金、年终奖个税、贷款和日期类在线工具，适合招聘、薪税服务、社保代理、公积金咨询、人力资源 SaaS、职场服务等品牌做长期内容赞助。</p><h2>可合作位置</h2><ul><li>城市工资/社保/公积金页面的工具区下方展示位。</li><li>通用工具页赞助位。</li><li>联系页和推广披露页的合作说明。</li></ul><h2>当前状态说明</h2><p>本站仍处于收录和搜索流量增长早期，不承诺曝光、点击或转化；正式报价应以 Clarity、搜索资源平台和广告后台的真实数据为准。</p><h2>商务联系</h2><p>${contactLine()}</p>`), 0.4, "monthly");
+  write("/contact/", legalPage("/contact/","联系我们",`<p>如需反馈数据错误、城市政策更新、合作或广告位接入，可通过以下方式联系：</p><p>${contactLine()}</p><p>合作前请理解：本站计算结果仅供估算参考，不提供官方税务、社保或公积金承诺。</p>`), 0.4, "monthly");
   write("/affiliate-disclosure/", legalPage("/affiliate-disclosure/","推广披露",`<p>本站后续可能加入广告联盟或 CPS 推广链接。若用户通过相关链接访问第三方服务，本站可能获得广告或推广收益。</p><p>我们会尽量保持工具内容独立，不因商业合作影响基础计算功能。</p>`), 0.4, "yearly");
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(p=>`  <url><loc>${abs(p.route)}</loc><lastmod>${buildDate}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority.toFixed(2)}</priority></url>`).join("\n")}\n</urlset>\n`;
   fs.writeFileSync(path.join(outDir,"sitemap.xml"), sitemap, "utf8");
   fs.writeFileSync(path.join(outDir,"robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`, "utf8");
   fs.writeFileSync(path.join(outDir,"CNAME"), "miaosuangongzi.com\n", "utf8");
+  const adsPublisher = adsTxtPublisher();
+  if (adsPublisher) fs.writeFileSync(path.join(outDir,"ads.txt"), `google.com, ${adsPublisher}, DIRECT, f08c47fec0942fa0\n`, "utf8");
   fs.writeFileSync(path.join(outDir,"page-manifest.json"), JSON.stringify({ siteName, siteUrl, generatedAt: new Date().toISOString(), pages: pages.length, cities: cities.length, cityLongTailPages: cities.length * cityToolTypes.length, salaryScenarioPages: cities.length * salaryScenarioAmounts.length, tools: tools.length }, null, 2), "utf8");
   console.log(`Built ${pages.length} HTML pages into ${outDir}`);
   console.log(`Cities: ${cities.length}, city long-tail pages: ${cities.length * cityToolTypes.length}, salary scenario pages: ${cities.length * salaryScenarioAmounts.length}, tools: ${tools.length}`);
